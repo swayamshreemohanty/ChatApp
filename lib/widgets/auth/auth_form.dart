@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AuthForm extends StatefulWidget {
-  const AuthForm(this.submitFn);
+  const AuthForm(this.submitFn, this.isLoading);
+  final bool isLoading;
   final void Function(
     String email,
     String password,
@@ -37,8 +38,8 @@ class _AuthFormState extends State<AuthForm> {
       widget.submitFn(
         _userEmail.trim(),
         //.trim() is used to remove the extra whitespace at the beginning and end of the user input to avoid the error.
-        _userName.trim(),
         _userPassword.trim(),
+        _userName.trim(),
         _isLogin,
         context,
       );
@@ -116,31 +117,33 @@ class _AuthFormState extends State<AuthForm> {
                     },
                   ),
                   SizedBox(height: 12),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                  if (widget.isLoading) CircularProgressIndicator(),
+                  if (!widget.isLoading)
+                    ElevatedButton(
+                      style: ButtonStyle(
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                         ),
                       ),
+                      onPressed: _trySubmit,
+                      child: Text(_isLogin ? "Login" : "Signup"),
                     ),
-                    onPressed: _trySubmit,
-                    child: Text(
-                      _isLogin ? "Login" : "Signup",
+                  if (!widget.isLoading)
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _isLogin = !_isLogin;
+                        });
+                      },
+                      child: Text(
+                        _isLogin
+                            ? "Create new account"
+                            : "I already have an account",
+                      ),
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _isLogin = !_isLogin;
-                      });
-                    },
-                    child: Text(
-                      _isLogin
-                          ? "Create new account"
-                          : "I already have an account",
-                    ),
-                  ),
                 ],
               ),
             ),

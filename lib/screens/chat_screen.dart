@@ -1,36 +1,55 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:chat_app/widgets/chat/message.dart';
 
 class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
-        body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('/chats/2sb3wZBNumh1IkD9v49e/messages')
-              //this snapshots() is used to update the flutter app with the recent change in the Cloud Firestore
-              .snapshots(),
-          builder: (ctx, AsyncSnapshot<QuerySnapshot> streamSnapshot) {
-            //to fetch the Async data in form of QuerySnapshot
-            if (streamSnapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(
-                  color: Colors.blue,
+        appBar: AppBar(
+          brightness: Brightness.dark,
+          title: Text("Demon Chat"),
+          actions: [
+            DropdownButton(
+              icon: Icon(
+                Icons.more_vert,
+                color: Theme.of(context).primaryIconTheme.color,
+              ),
+              items: [
+                DropdownMenuItem(
+                  child: Container(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.exit_to_app,
+                          color: Colors.black,
+                        ),
+                        SizedBox(width: 8),
+                        Text("Logout"),
+                      ],
+                    ),
+                  ),
+                  value: 'logout',
                 ),
-              );
-            }
-            final document = streamSnapshot.data!.docs;
-            return ListView.builder(
-              itemCount: document.length,
-              itemBuilder: (ctx, index) {
-                return Container(
-                  padding: EdgeInsets.all(8),
-                  child: Text("${document[index]["text"]}"),
-                );
+              ],
+              onChanged: (itemIdentifier) {
+                if (itemIdentifier == 'logout') {
+                  FirebaseAuth.instance.signOut();
+                }
               },
-            );
-          },
+            )
+          ],
+        ),
+        body: Container(
+          child: Column(
+            children: [
+              //Here Expanded() helps to build the list view, i.e. only takes as much space as available on the current screen whilst still being scrollable.
+              Expanded(
+                child: Messages(),
+              ),
+            ],
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),

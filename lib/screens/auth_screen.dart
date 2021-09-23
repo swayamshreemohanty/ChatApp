@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:chat_app/widgets/auth_form.dart';
+import 'package:chat_app/widgets/auth/auth_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -9,6 +10,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  var _isLoading = false;
   final _auth = FirebaseAuth.instance;
   Future<void> _submitAuthForm(
     String email,
@@ -17,10 +19,11 @@ class _AuthScreenState extends State<AuthScreen> {
     bool isLogin,
     BuildContext context,
   ) async {
-    print("**User Data**");
-    print(email);
     UserCredential authResult;
     try {
+      setState(() {
+        _isLoading = true;
+      });
       if (isLogin) {
         //login
         authResult = await _auth.signInWithEmailAndPassword(
@@ -30,8 +33,20 @@ class _AuthScreenState extends State<AuthScreen> {
         //signup
         authResult = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(authResult.user!.uid)
+            .set({
+          'username': username,
+          'email': email,
+        });
+        //here we use .doc(authResult.user!.uid), for use the existing user ID (generate during sign-up) as our ID in this user collection.
+        //if we use .add() instead of .doc(), the user id will generate dynamically.
       }
     } on PlatformException catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       var message = 'An error occurred, please check your credentials!';
       if (error.message != null) {
         message = error.message!;
@@ -43,8 +58,16 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       );
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       print("**ERROR**");
-
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("$error"),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
       print(error);
     }
   }
@@ -53,7 +76,10 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: AuthForm(_submitAuthForm),
+      body: AuthForm(
+        _submitAuthForm,
+        _isLoading,
+      ),
     );
   }
 }
