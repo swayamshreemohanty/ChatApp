@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:chat_app/pickers/user_image_picker.dart';
 
 class AuthForm extends StatefulWidget {
   const AuthForm(this.submitFn, this.isLoading);
@@ -7,6 +10,7 @@ class AuthForm extends StatefulWidget {
     String email,
     String password,
     String username,
+    File? image,
     bool isLogin,
     BuildContext context,
   ) submitFn;
@@ -25,24 +29,40 @@ class _AuthFormState extends State<AuthForm> {
   var _userEmail = '';
   var _userName = '';
   var _userPassword = '';
+  File? _userImageFile;
 
-  final _formKey = GlobalKey<
-      FormState>(); //This is used to trigger the form members simultaneously.
+  final _formKey = GlobalKey<FormState>();
+  //This is used to trigger the form members simultaneously.
+
+  void _pickedImage(File image) {
+    _userImageFile = image;
+    //this Function is used to get the image data from user_image_picker.dart
+  }
 
   void _trySubmit() {
     final isValid = _formKey.currentState!.validate();
     FocusScope.of(context).unfocus();
     //This is used to close the soft keyboard, which might be still open as soon as the form submitted.
+    if (_userImageFile == null && !_isLogin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please pick an Image"),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
+      return;
+    }
     if (isValid) {
       _formKey.currentState!.save();
       widget.submitFn(
         _userEmail.trim(),
-        //.trim() is used to remove the extra whitespace at the beginning and end of the user input to avoid the error.
         _userPassword.trim(),
         _userName.trim(),
+        _userImageFile,
         _isLogin,
         context,
       );
+      //.trim() is used to remove the extra whitespace at the beginning and end of the user input to avoid the error.
     }
   }
 
@@ -59,9 +79,15 @@ class _AuthFormState extends State<AuthForm> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (!_isLogin)
+                    UserImagePicker(
+                        _pickedImage), //here we pass the pointer of _pickedImage
                   TextFormField(
                     key: ValueKey(
                         'Email'), //This key/identifier is allow flutter to uniquely identify an element, if it have similar elements next to each other.
+                    autocorrect: false,
+                    textCapitalization: TextCapitalization.none,
+                    enableSuggestions: false,
                     validator: (value) {
                       //This is used to validate the user input
                       if (value!.isEmpty || !value.contains('@')) {
@@ -82,6 +108,9 @@ class _AuthFormState extends State<AuthForm> {
                   if (!_isLogin)
                     TextFormField(
                       key: ValueKey('User Name'),
+                      autocorrect: true,
+                      textCapitalization: TextCapitalization.words,
+                      enableSuggestions: false,
                       validator: (value) {
                         //This is used to validate the user input
                         if (value!.isEmpty || value.length < 4) {
