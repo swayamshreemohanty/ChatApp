@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:chat_app/pickers/user_image_picker.dart';
 

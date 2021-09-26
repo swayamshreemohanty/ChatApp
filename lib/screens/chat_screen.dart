@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chat_app/widgets/chat/message.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -10,6 +11,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
             onChanged: (itemIdentifier) {
               if (itemIdentifier == 'logout') {
+                googleSignIn.signOut();
                 FirebaseAuth.instance.signOut();
               }
             },
